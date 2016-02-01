@@ -21,16 +21,6 @@ qplot(reviewCount$n, geom="histogram", fill=I("blue"), col=I("red"), alpha = I(.
 reviewCount <- reviewCount %>% filter(n >= 10)
 reviewRep <- subset(totalRaw, totalRaw$asin %in% reviewCount$asin)
 
-# Product price distribution histogram
-prices <- data.frame(price=unique(reviewRep$price))
-qplot(prices$price, geom="histogram", fill=I("blue"), col=I("red"), alpha = I(.3), binwidth=10,
-      main="Price Distribution", xlab="Price", ylab="Count", xlim=c(0,500))
-
-# Product average rating distribution histogram
-reviewRating <- reviewRep %>% group_by(asin) %>% summarize(rating=round(mean(rating),2))
-qplot(reviewRating$rating, geom="histogram", fill=I("blue"), col=I("red"), alpha = I(.3), binwidth=0.1,
-      main="Average Rating Distribution", xlab="Average Rating", ylab="Count")
-
 # Words that do not contribute to keywords and should be removed from review contents
 positive <- read.csv("./data/positive words.csv", stringsAsFactors = FALSE)
 negative <- read.csv("./data/negative words.csv", stringsAsFactors = FALSE)
@@ -81,7 +71,12 @@ tempReviews <- puncCorrect(tempReviews)
 testDTM <- reviewToWordsFn(tempReviews)
 rm(tempReviews)
 freq <- sort(colSums(as.matrix(testDTM)), decreasing=TRUE)
-testWords <- data.frame(word=names(freq), freq=freq)
+testWords <- data.frame(word=names(freq), freq=freq, stringsAsFactors = FALSE)
+# For colour difference in plot
+testWords$colour <- "no"
+testWords[testWords$word == "learning","colour"] <- "yes"
+testWords <- testWords[testWords$freq>1,]
+write.csv(testWords, file="testWords.csv", row.names=FALSE)
 
 # Test case for the toy Scientific Explorer My First Mind Blowing Science Kit
 
@@ -221,19 +216,28 @@ tempReviews <- puncCorrect(tempReviews)
 test2DTM <- reviewToWordsFn(tempReviews)
 rm(tempReviews)
 freq2 <- sort(colSums(as.matrix(test2DTM)), decreasing=TRUE)
-test2Words <- data.frame(word=names(freq2), freq=freq2)
+test2Words <- data.frame(word=names(freq2), freq=freq2, stringsAsFactors = FALSE)
+# For colour difference in plot
+test2Words$colour <- "no"
+test2Words[test2Words$word == "learning","colour"] <- "yes"
+test2Words <- test2Words[test2Words$freq>1,]
+write.csv(test2Words, file="test2Words.csv", row.names=FALSE)
 
-p <- ggplot(subset(testWords, freq>=200), aes(word, freq))    
-p <- p + geom_bar(stat="identity", fill="blue", alpha=0.5)
-p <- p + ggtitle("Snap Circuit Reviews Keywords") + theme(plot.title = element_text(lineheight=.8, face="bold",size=16))
-p <- p + theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank())
+p1 <- ggplot(subset(testWords, freq>=200), aes(word, freq)) +
+  geom_bar(stat="identity", alpha=0.8, aes(fill=colour)) +
+  ggtitle("Snap Circuit Reviews Keywords") + ylab("Frequency") +
+  theme(plot.title = element_text(lineheight=.8, face="bold",size=16)) +
+  theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank()) +
+  theme(legend.position="none")
 
-p2 <- ggplot(subset(test2Words, freq>=48), aes(word, freq))    
-p2 <- p2 + geom_bar(stat="identity", fill="blue", alpha=0.5)   
-p2 <- p2 + ggtitle("Science Kit Reviews Keywords") + theme(plot.title = element_text(lineheight=.8, face="bold",size=16))
-p2 <- p2 + theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank())
+p2 <- ggplot(subset(test2Words, freq>=48), aes(word, freq)) +
+  geom_bar(stat="identity", alpha=0.8, aes(fill=colour)) +
+  ggtitle("Science Kit Reviews Keywords") + ylab("Frequency") +
+  theme(plot.title = element_text(lineheight=.8, face="bold",size=16)) +
+  theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank()) +
+  theme(legend.position="none")
 
 library(Rmisc)
 png(filename="keywords.png", width=700, height=1100)
-multiplot(p,p2,cols=1)
+multiplot(p1,p2,cols=1)
 dev.off()
