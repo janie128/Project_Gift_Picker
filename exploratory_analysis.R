@@ -82,11 +82,6 @@ testDTM <- reviewToWordsFn(tempReviews)
 rm(tempReviews)
 freq <- sort(colSums(as.matrix(testDTM)), decreasing=TRUE)
 testWords <- data.frame(word=names(freq), freq=freq)
-p <- ggplot(subset(testWords, freq>=160), aes(word, freq))    
-p <- p + geom_bar(stat="identity", fill="blue", alpha=0.5)   
-p <- p + theme(axis.text.x=element_text(angle=45, hjust=1))
-p
-
 
 # Test case for the toy Scientific Explorer My First Mind Blowing Science Kit
 
@@ -227,7 +222,18 @@ test2DTM <- reviewToWordsFn(tempReviews)
 rm(tempReviews)
 freq2 <- sort(colSums(as.matrix(test2DTM)), decreasing=TRUE)
 test2Words <- data.frame(word=names(freq2), freq=freq2)
-p2 <- ggplot(subset(test2Words, freq>=160), aes(word, freq))    
+
+p <- ggplot(subset(testWords, freq>=200), aes(word, freq))    
+p <- p + geom_bar(stat="identity", fill="blue", alpha=0.5)
+p <- p + ggtitle("Snap Circuit Reviews Keywords") + theme(plot.title = element_text(lineheight=.8, face="bold",size=16))
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank())
+
+p2 <- ggplot(subset(test2Words, freq>=48), aes(word, freq))    
 p2 <- p2 + geom_bar(stat="identity", fill="blue", alpha=0.5)   
-p2 <- p2 + theme(axis.text.x=element_text(angle=45, hjust=1))
-p2
+p2 <- p2 + ggtitle("Science Kit Reviews Keywords") + theme(plot.title = element_text(lineheight=.8, face="bold",size=16))
+p2 <- p2 + theme(axis.text.x=element_text(angle=45, hjust=1, size=16), axis.title.x = element_blank())
+
+library(Rmisc)
+png(filename="keywords.png", width=700, height=1100)
+multiplot(p,p2,cols=1)
+dev.off()
